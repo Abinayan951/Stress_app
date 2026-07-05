@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "MindEcho",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,15 +10,19 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.emergent.emotiondetectai.hz5sar"
+      "bundleIdentifier": "com.emergent.emotiondetectai.hz5sar",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Record your voice reflections for stress analysis."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#F7F6F2"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.emergent.emotiondetectai.hz5sar"
+      "package": "com.emergent.emotiondetectai.hz5sar",
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",
@@ -28,12 +32,16 @@
     "plugins": [
       "expo-router",
       [
+        "expo-audio",
+        { "microphonePermission": "Record your voice reflections for stress analysis." }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#F7F6F2"
         }
       ]
     ],
