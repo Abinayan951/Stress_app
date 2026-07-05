@@ -196,7 +196,9 @@ async def analyze_with_claude(text: str, modality: str, extra_context: str = "")
 
 async def transcribe_audio(path: str) -> str:
     stt = OpenAISpeechToText(api_key=EMERGENT_LLM_KEY)
-    resp = await stt.transcribe(file=path, model="whisper-1", response_format="json")
+    # litellm's atranscription requires a file-like object, not a path string.
+    with open(path, "rb") as fh:
+        resp = await stt.transcribe(file=fh, model="whisper-1", response_format="json")
     # litellm returns object with .text
     if hasattr(resp, "text"):
         return resp.text
