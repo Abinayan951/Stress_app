@@ -1,0 +1,177 @@
+{
+  "app_name": "MindEcho",
+  "personality": "8 Hand-Drawn / Journal LIGHT (with XAI clarity)",
+  "personality_one_liner": "A calming, reflective, and transparent space that feels human-made, helping users understand their stress without clinical anxiety.",
+  "color": {
+    "surface": "#F7F6F2",
+    "onSurface": "#2A2C2A",
+    "surfaceSecondary": "#EBE9E4",
+    "onSurfaceSecondary": "#424542",
+    "surfaceTertiary": "#DFDCD6",
+    "onSurfaceTertiary": "#515451",
+    "surfaceInverse": "#2A2C2A",
+    "onSurfaceInverse": "#F7F6F2",
+    "brand": "#6E7A65",
+    "brandPrimary": "#6E7A65",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#8B9683",
+    "onBrandSecondary": "#1A1C1A",
+    "brandTertiary": "#C9CFC5",
+    "onBrandTertiary": "#2A2C2A",
+    "success": "#5C7360",
+    "onSuccess": "#FFFFFF",
+    "warning": "#C49B71",
+    "onWarning": "#FFFFFF",
+    "error": "#B86B5A",
+    "onError": "#FFFFFF",
+    "border": "#D4D2CD",
+    "borderStrong": "#B3B1AC",
+    "divider": "#E3E1DC",
+    "dark_surface": "#1C1E1C",
+    "dark_onSurface": "#EAE9E5",
+    "dark_surfaceSecondary": "#252825",
+    "dark_onSurfaceSecondary": "#CDCCC8",
+    "dark_surfaceTertiary": "#2E312E",
+    "dark_onSurfaceTertiary": "#AFAEA9",
+    "dark_surfaceInverse": "#EAE9E5",
+    "dark_onSurfaceInverse": "#1C1E1C",
+    "dark_brand": "#8A997F",
+    "dark_brandPrimary": "#8A997F",
+    "dark_onBrandPrimary": "#1A1C1A",
+    "dark_brandSecondary": "#6E7A65",
+    "dark_onBrandSecondary": "#FFFFFF",
+    "dark_brandTertiary": "#3F463A",
+    "dark_onBrandTertiary": "#EAE9E5",
+    "dark_success": "#708A74",
+    "dark_onSuccess": "#1A1C1A",
+    "dark_warning": "#D6AE88",
+    "dark_onWarning": "#1A1C1A",
+    "dark_error": "#C77E6D",
+    "dark_onError": "#1A1C1A",
+    "dark_border": "#3A3E3A",
+    "dark_borderStrong": "#5A5E5A",
+    "dark_divider": "#2D302D"
+  },
+  "typography": {
+    "displayFontFamily": "Fraunces",
+    "textFontFamily": "Nunito",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous vertical breathing room. Use soft asymmetry and intentional whitespace rather than rigid, dense grids.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "pill": 999
+  },
+  "shadow_tier": 0,
+  "navigation": "bottom_tabs",
+  "icon_set": "Feather",
+  "glassmorphism": {
+    "enabled": false,
+    "do's": [
+      "Use solid surfaceSecondary with slight opacity variations if depth is needed.",
+      "Use gradient scrims over background photos."
+    ],
+    "dont's": [
+      "No frosted glass or heavy blur - clashes with the matte, natural paper aesthetic."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-blur",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "haptics": {
+    "primary_button_press": "impactLight",
+    "voice_record_start": "impactMedium",
+    "voice_record_stop": "impactMedium",
+    "tab_change": "selection",
+    "expand_xai_reasoning": "selection"
+  },
+  "screens": [
+    {
+      "name": "Dashboard",
+      "purpose": "Overview of today's stress level (fused AI result) and quick actions to log a voice/text entry.",
+      "layout": "Soft blurred gradient background in the top 30% of the screen. A central hero card showing the latest prediction with a Level 1 Explainability badge (e.g., 'Predicted via Voice & Text'). Below, a 2-column layout for 'New Voice Entry' and 'New Text Entry' using rounded cards. Bottom section contains a simplified line chart of the week's stress levels.",
+      "states": {
+        "loading": "Centered soft spinner with 'Gathering insights...'",
+        "empty": "Empty state illustration with a warm prompt: 'Log your first voice note to see your stress trends.'",
+        "error": "Gentle error message with a 'Retry' text button."
+      }
+    },
+    {
+      "name": "Voice Recording",
+      "purpose": "A distraction-free, calming space to record voice thoughts for AI analysis.",
+      "layout": "Minimalist layout. A large circular record button at the bottom center with subtle, soft reanimated pulse rings while recording. The top displays a calm prompt ('How are you feeling right now?'). A sticky 'Analyze' button appears only after recording is stopped.",
+      "states": {
+        "loading": "Analyzing voice patterns... (with progress bar)",
+        "empty": "Standard recording interface.",
+        "error": "Microphone permission denied error with action to open settings."
+      }
+    },
+    {
+      "name": "Analysis Results (Multimodal Fusion & XAI)",
+      "purpose": "Show the AI prediction (Low/Medium/High) and transparently explain why it made that decision.",
+      "layout": "Uses a 3-tier XAI pattern. The hero section shows the stress level. Below it, an expandable popover/card (Level 2) showing 3-5 key parameters in plain language (e.g., 'Elevated pitch detected in voice', 'Use of anxious words: \"overwhelmed\"'). An interactive heatmap highlights specific words from the text transcript. Includes a 'Download PDF Report' secondary button.",
+      "states": {
+        "loading": "Fusing multimodal data...",
+        "empty": "N/A",
+        "error": "Failed to analyze data, please try again."
+      }
+    },
+    {
+      "name": "History & Reports",
+      "purpose": "Chronological timeline of past entries with accessible PDF reports.",
+      "layout": "Vertical timeline layout using a left border and dots for each entry. Each item shows the time, stress level color-coded (success/warning/error colors but muted), and entry type (Voice/Text/Both). Sticky 'Export Monthly Report' at the bottom.",
+      "states": {
+        "loading": "Loading past entries...",
+        "empty": "Line art abstract plant illustration with 'Your journal is clear. Start by making an entry.'",
+        "error": "Could not load history. Tap to retry."
+      }
+    }
+  ],
+  "images": {
+    "dashboard_hero_bg": {
+      "url": "https://images.unsplash.com/photo-1643916861337-1e13c6f09b72",
+      "dark": "https://images.unsplash.com/photo-1649861742672-20152f77c1f5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxzYWdlJTIwZ3JlZW4lMjBhYnN0cmFjdCUyMGJsdXJyZWQlMjBncmFkaWVudCUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzgzMjgwOTI1fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Soft abstract gradient background"
+    },
+    "history_empty_state": {
+      "url": "https://images.unsplash.com/photo-1769095433984-6abf8111560c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxjYWxtJTIwbWluaW1hbCUyMGxpbmUlMjBhcnQlMjBwbGFudCUyMGlsbHVzdHJhdGlvbnxlbnwwfHx8fDE3ODIyOTY0MzN8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Delicate dried flower line art"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Use Personality 8 (Hand-Drawn / Journal LIGHT) as the core aesthetic. This app is for mental health and needs to feel extremely safe, tactile, and calming, avoiding any 'clinical' or 'tech-heavy' look.",
+    "Implement the UI with a strict ban on indigo, blue, purple, or pure black. Use the provided Sage/Dusty Olive brand colors and warm off-white/charcoal bases.",
+    "Use 'Fraunces' for headings (adds editorial warmth) and 'Nunito' for body text (soft and readable). Ensure maximum font weight is 500 across the app.",
+    "For the Explainable AI (XAI) UI, DO NOT use complex probability graphs. Implement a 3-tier structure: Level 1 indicator (badge), Level 2 plain language summary ('Why this prediction?'), and highlighted text for text analysis.",
+    "Ensure the voice recording screen has a prominent, easy-to-hit target and uses `react-native-reanimated` to create a soft, breathing pulse effect while recording.",
+    "For charts in the Dashboard, use the muted semantic colors (`success` for Low stress, `warning` for Medium, `error` for High). Ensure they blend with the soft journal aesthetic rather than looking like a corporate stock ticker.",
+    "Include gradient scrims (using expo-linear-gradient) over the dashboard_hero_bg image if text is overlaid on it to guarantee WCAG contrast.",
+    "Wire haptics for primary interactions as defined in the haptics block."
+  ]
+}
