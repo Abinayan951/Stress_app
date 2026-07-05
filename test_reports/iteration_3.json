@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only regression test for the reported bug 'unable to leave/delete result screen'. Ran end-to-end flows on the preview URL (390x844 viewport) using freshly registered users. All primary bug-fix flows PASS: text analyze -> /result/[id]; back arrow returns to Text tab (router.push worked correctly); Done button navigates to dashboard; Delete opens in-app Modal (not native Alert) with Cancel/Delete buttons; Cancel closes modal keeping user on result; Confirm delete calls API, shows toast 'Entry deleted.', navigates to /(tabs)/history, and the item is removed. Minor observation: the result screen is registered at Stack root (outside the (tabs) group), so the bottom tab bar is NOT rendered on /result/[id]. The review request asked to verify the tab bar works on the result screen — this expectation is architecturally not met, but the back arrow and Done button provide clear exits, so the user-reported bug is resolved. Also noticed a benign RN web warning: 'props.pointerEvents is deprecated. Use style.pointerEvents'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/result/[id]",
+        "issues": [
+          "Bottom tab bar (Journal/Voice/Text/History) is NOT visible on the result screen because /app/result/[id].tsx is declared at the root Stack (outside the (tabs) group). The review request explicitly asked to verify tab-bar navigation from the result screen. Consider moving result inside (tabs) or rendering a persistent tab bar if this is desired UX. Current exits (back arrow + Done button) do work, so this is a UX/spec-parity issue, not a blocker."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "pointerEvents prop (unknown source; possibly a nested lib)",
+        "issue": "Web console repeatedly logs: 'props.pointerEvents is deprecated. Use style.pointerEvents'. Non-blocking, but should be migrated for future RN versions."
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Decide whether the result screen should sit inside (tabs) to satisfy the tab-bar-on-result requirement, or drop that requirement from the spec since back-arrow + Done cover exit paths.",
+    "Migrate any lingering pointerEvents={...} props to style={{ pointerEvents: ... }} to silence the deprecation warning."
+  ],
+  "critical_code_review_comments": [
+    "result/[id].tsx: goBack() correctly falls back to /(tabs)/dashboard when there is no history — good.",
+    "Native Alert.alert is fully replaced by a controlled Modal component with proper testIDs (delete-cancel, delete-confirm) — verified visually and functionally.",
+    "text.tsx uses router.push (correct) so /result/[id] retains history and back works.",
+    "confirmDelete has good UX: disables buttons during deletion, shows a toast, and delays navigation slightly (250ms) so the toast is visible."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested", "frontend": "100% for the reported bug flows (7/7 assertions passed); 1 spec-parity gap (tab bar on result screen not rendered by design)"},
+  "seed_data_creation": "Registered 4 fresh users (qa+<ts>@mindecho.dev / password123) during testing; each created 1 text analysis entry which was subsequently deleted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Result screen lives at /app/result/[id].tsx outside the (tabs) group => bottom tab bar is absent there. Use router.push from tab screens (text/voice/history) to reach /result/[id] so back navigation works. In-app confirm modal testIDs: result-delete opens, delete-cancel closes, delete-confirm executes DELETE /api/history/{id}. Toast 'Entry deleted.' has testID 'result-toast'. After delete the screen replaces to /(tabs)/history.",
+  "rca_of_issue": "Original bug: on /result/[id] users could not leave or delete. RCA: (1) tab screens used router.replace() to navigate to /result/[id], destroying the back stack; (2) delete confirmation used Alert.alert which is unreliable on web/RN. Fix (verified): text.tsx/voice.tsx now use router.push; result/[id].tsx uses router.canGoBack() with fallback to dashboard, exposes a 'Done — back to journal' button, and replaces Alert.alert with an in-app <Modal>. All flows verified end-to-end via Playwright."
+}

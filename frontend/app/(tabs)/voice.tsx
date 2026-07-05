@@ -80,7 +80,7 @@ export default function VoiceScreen() {
     setBusy(true); setError(null);
     try {
       const result = await api.analyzeVoice(uri);
-      router.replace({ pathname: "/result/[id]", params: { id: result.id } });
+      router.push({ pathname: "/result/[id]", params: { id: result.id } });
     } catch (e: any) {
       setError(e?.message || "Analysis failed");
     } finally {

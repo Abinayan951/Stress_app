@@ -27,7 +27,7 @@ export default function TextScreen() {
     setBusy(true); setError(null);
     try {
       const result = await api.analyzeText(t);
-      router.replace({ pathname: "/result/[id]", params: { id: result.id } });
+      router.push({ pathname: "/result/[id]", params: { id: result.id } });
     } catch (e: any) {
       setError(e?.message || "Analysis failed");
     } finally {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,30 +17,55 @@ export default function ResultScreen() {
   const [item, setItem] = useState<Analysis | null>(null);
   const [expanded, setExpanded] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         if (id) setItem(await api.historyDetail(id));
-      } catch { /* ignore */ }
+      } catch {
+        setToast("Could not load this entry.");
+      }
     })();
   }, [id]);
 
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)/dashboard");
+  };
+
   if (!item) {
-    return <View style={styles.center}><ActivityIndicator color={colors.brandPrimary} /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.brandPrimary} />
+        <Pressable testID="result-back-loading" onPress={goBack} style={[styles.iconBtn, { marginTop: spacing.lg }]}>
+          <Feather name="arrow-left" size={20} color={colors.onSurface} />
+        </Pressable>
+      </View>
+    );
   }
 
   const color = levelColor(item.stress_level);
   const words = new Set(item.highlighted_words.map(w => w.toLowerCase()));
   const source = item.transcript || item.original_text || "";
 
-  const onDelete = async () => {
-    Alert.alert("Delete entry?", "This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => {
-        try { await api.deleteHistory(item.id); router.back(); } catch { /* ignore */ }
-      } },
-    ]);
+  const confirmDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await api.deleteHistory(item.id);
+      setConfirmOpen(false);
+      setToast("Entry deleted.");
+      // navigate to history so the list refreshes
+      setTimeout(() => router.replace("/(tabs)/history"), 250);
+    } catch (e: any) {
+      setConfirmOpen(false);
+      setToast(e?.message || "Delete failed.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const onExportPDF = async () => {
@@ -51,9 +76,11 @@ export default function ResultScreen() {
       const { uri } = await Print.printToFileAsync({ html });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle: "MindEcho Report" });
+      } else {
+        setToast("PDF ready, but sharing isn't available on this device.");
       }
     } catch (e: any) {
-      Alert.alert("Export failed", e?.message || "Could not create PDF");
+      setToast(e?.message || "Could not create PDF");
     } finally {
       setBusy(false);
     }
@@ -63,11 +90,11 @@ export default function ResultScreen() {
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <LinearGradient colors={[colors.brandTertiary, colors.surface]} style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerRow}>
-          <Pressable testID="result-back" onPress={() => router.back()} style={styles.iconBtn}>
+          <Pressable testID="result-back" onPress={goBack} style={styles.iconBtn}>
             <Feather name="arrow-left" size={20} color={colors.onSurface} />
           </Pressable>
           <Text style={styles.headerTitle}>Analysis</Text>
-          <Pressable testID="result-delete" onPress={onDelete} style={styles.iconBtn}>
+          <Pressable testID="result-delete" onPress={() => setConfirmOpen(true)} style={styles.iconBtn}>
             <Feather name="trash-2" size={18} color={colors.error} />
           </Pressable>
         </View>
@@ -86,6 +113,12 @@ export default function ResultScreen() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md }}>
+        {/* Done button — obvious way out */}
+        <Pressable testID="result-done" onPress={() => router.replace("/(tabs)/dashboard")} style={styles.secondaryBtn}>
+          <Feather name="check" size={16} color={colors.brandPrimary} />
+          <Text style={styles.secondaryBtnText}>Done — back to journal</Text>
+        </Pressable>
+
         {/* Fusion breakdown */}
         {item.modality === "multimodal" && item.voice_probability != null && item.text_probability != null ? (
           <View style={styles.card}>
@@ -157,6 +190,36 @@ export default function ResultScreen() {
           )}
         </Pressable>
       </ScrollView>
+
+      {/* Confirm delete modal */}
+      <Modal transparent visible={confirmOpen} animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
+        <Pressable style={styles.modalScrim} onPress={() => !deleting && setConfirmOpen(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalIcon}><Feather name="trash-2" size={22} color={colors.error} /></View>
+            <Text style={styles.modalTitle}>Delete this entry?</Text>
+            <Text style={styles.modalBody}>This reflection will be permanently removed from your journal.</Text>
+            <View style={styles.modalBtnRow}>
+              <Pressable testID="delete-cancel" onPress={() => setConfirmOpen(false)} disabled={deleting} style={[styles.modalBtn, styles.modalBtnGhost]}>
+                <Text style={styles.modalBtnGhostText}>Cancel</Text>
+              </Pressable>
+              <Pressable testID="delete-confirm" onPress={confirmDelete} disabled={deleting} style={[styles.modalBtn, styles.modalBtnDanger]}>
+                {deleting ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalBtnDangerText}>Delete</Text>}
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Toast */}
+      {toast ? (
+        <Pressable
+          testID="result-toast"
+          onPress={() => setToast(null)}
+          style={[styles.toast, { bottom: insets.bottom + spacing.lg }]}
+        >
+          <Text style={styles.toastText}>{toast}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -247,4 +310,19 @@ const styles = StyleSheet.create({
   fusionRow: { flexDirection: "row", gap: spacing.lg, marginTop: spacing.md },
   cta: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.brandPrimary, borderRadius: radius.pill, paddingVertical: 16, alignItems: "center", justifyContent: "center", marginTop: spacing.md },
   ctaText: { color: colors.onBrandPrimary, fontSize: font.sizes.lg, fontWeight: "500" },
+  secondaryBtn: { flexDirection: "row", gap: spacing.sm, alignItems: "center", justifyContent: "center", paddingVertical: 12, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.brandPrimary },
+  secondaryBtnText: { color: colors.brandPrimary, fontWeight: "500", fontSize: font.sizes.base },
+  modalScrim: { flex: 1, backgroundColor: "rgba(42,44,42,0.55)", alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl },
+  modalCard: { width: "100%", maxWidth: 360, backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.xl, alignItems: "center", gap: spacing.md, borderWidth: 1, borderColor: colors.border },
+  modalIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surfaceSecondary, alignItems: "center", justifyContent: "center" },
+  modalTitle: { fontFamily: "serif", fontSize: font.sizes.xl, color: colors.onSurface, textAlign: "center" },
+  modalBody: { color: colors.onSurfaceSecondary, textAlign: "center" },
+  modalBtnRow: { flexDirection: "row", gap: spacing.md, marginTop: spacing.sm, alignSelf: "stretch" },
+  modalBtn: { flex: 1, paddingVertical: 12, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
+  modalBtnGhost: { backgroundColor: colors.surfaceSecondary, borderWidth: 1, borderColor: colors.border },
+  modalBtnGhostText: { color: colors.onSurface, fontWeight: "500" },
+  modalBtnDanger: { backgroundColor: colors.error },
+  modalBtnDangerText: { color: "#fff", fontWeight: "500" },
+  toast: { position: "absolute", left: spacing.lg, right: spacing.lg, backgroundColor: colors.onSurface, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: radius.md, elevation: 6 },
+  toastText: { color: colors.onSurfaceInverse, textAlign: "center" },
 });
